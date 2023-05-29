@@ -1,7 +1,9 @@
 package flightimporter;
 
+import models.FlightData;
 import models.SkyOneAirlinesFlightData;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
@@ -10,6 +12,7 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import java.io.InputStream;
+import java.time.ZonedDateTime;
 import java.util.Properties;
 
 public class FlightImporterJob {
@@ -34,8 +37,19 @@ public class FlightImporterJob {
                 WatermarkStrategy.noWatermarks(),
                 "skyone_source");
 
-        skyoneInput.print();
+        defineWorkflow(skyoneInput).print();
 
         env.execute();
+    }
+
+    public static DataStream<FlightData> defineWorkflow(DataStream<SkyOneAirlinesFlightData> skyOneSource) {
+        return skyOneSource.filter(new FilterFunction<SkyOneAirlinesFlightData>() {
+            @Override
+            public boolean filter(SkyOneAirlinesFlightData skyOneAirlinesFlightData) throws Exception {
+                return skyOneAirlinesFlightData.getFlightArrivalTime().isAfter(ZonedDateTime.now());
+            }
+        })
+                .map(SkyOneAirlinesFlightData::toFlightData);
+
     }
 }

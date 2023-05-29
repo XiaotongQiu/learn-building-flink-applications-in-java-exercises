@@ -1,7 +1,9 @@
 package models;
 
+import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.annotation.JsonFormat;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.flink.streaming.api.datastream.DataStream;
 
 import java.time.ZonedDateTime;
 import java.util.Objects;
@@ -19,6 +21,20 @@ public class SkyOneAirlinesFlightData {
     private String confirmation;
 
     public SkyOneAirlinesFlightData() {
+    }
+
+    public FlightData toFlightData(){
+        FlightData flightData = new FlightData();
+
+        flightData.setEmailAddress(getEmailAddress());
+        flightData.setDepartureTime(getFlightDepartureTime());
+        flightData.setDepartureAirportCode(getIataDepartureCode());
+        flightData.setArrivalTime(getFlightArrivalTime());
+        flightData.setArrivalAirportCode(getIataArrivalCode());
+        flightData.setFlightNumber(getFlightNumber());
+        flightData.setConfirmationCode(getConfirmation());
+
+        return flightData;
     }
 
     @Override
