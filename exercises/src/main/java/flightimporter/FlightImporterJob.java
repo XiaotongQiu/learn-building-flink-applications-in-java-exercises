@@ -1,9 +1,11 @@
 package flightimporter;
 
+import models.SkyOneAirlinesFlightData;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
+import org.apache.flink.formats.json.JsonDeserializationSchema;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
@@ -20,15 +22,15 @@ public class FlightImporterJob {
             consumerConfig.load(stream);
         }
 
-        KafkaSource<String> kafkaSource = KafkaSource
-                .<String>builder() // need to explicitly give String type here
+        KafkaSource<SkyOneAirlinesFlightData> kafkaSource = KafkaSource
+                .<SkyOneAirlinesFlightData>builder() // need to explicitly give String type here
                 .setProperties(consumerConfig)
                 .setTopics(TOPIC_SKYONE)
                 .setStartingOffsets(OffsetsInitializer.latest())
-                .setValueOnlyDeserializer(new SimpleStringSchema())
+                .setValueOnlyDeserializer(new JsonDeserializationSchema<>(SkyOneAirlinesFlightData.class))
                 .build();
 
-        DataStream<String> skyoneInput = env.fromSource(kafkaSource,
+        DataStream<SkyOneAirlinesFlightData> skyoneInput = env.fromSource(kafkaSource,
                 WatermarkStrategy.noWatermarks(),
                 "skyone_source");
 
